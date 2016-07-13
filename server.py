@@ -34,6 +34,8 @@ class CommentsResource(object):
     def on_get(self, req, resp):
         comments = self._get_comments()
         resp.body = json.dumps(comments)
+	resp.set_header('Cache-Control', 'no-cache')
+	resp.set_header('Access-Control-Allow-Origin', '*')
 
     @falcon.before(before("post before param"))
     @falcon.after(after("post after param"))
