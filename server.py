@@ -2,6 +2,13 @@ import json
 import falcon
 
 
+class CORSMiddleware(object):
+    def process_request(self, req, resp):
+        print "set header for CORS"
+        resp.set_header('Access-Control-Allow-Origin', '*')
+        resp.set_header('Access-Control-Allow-Headers', 'Content-Type')
+
+
 class Middleware(object):
     def process_request(self, req, resp):
         print "process_request called"
@@ -34,18 +41,16 @@ class CommentsResource(object):
     def on_get(self, req, resp):
         comments = self._get_comments()
         resp.body = json.dumps(comments)
-	resp.set_header('Cache-Control', 'no-cache')
-	resp.set_header('Access-Control-Allow-Origin', '*')
 
     @falcon.before(before("post before param"))
     @falcon.after(after("post after param"))
     def on_post(self, req, resp):
         comments = self._get_comments()
         body = req.stream.read()
-        print(body)
         new_comments = json.loads(body)
         comments.append(new_comments)
         self._write_comments(comments)
+        resp.body = json.dumps(comments)
 
     def _get_comments(self):
         with open('comments.json', 'r') as f:
@@ -58,7 +63,7 @@ class CommentsResource(object):
             f.write(json.dumps(comments, indent=4, separators=(',', ': ')))
 
 
-app = falcon.API(middleware=Middleware())
+app = falcon.API(middleware=[CORSMiddleware(), Middleware()])
 app.add_route("/api/comments", CommentsResource())
 
 
